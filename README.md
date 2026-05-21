@@ -1,247 +1,266 @@
-# 🤖 AI-Based Hand Gesture Controlled Robotic Car
- 
-A deep learning project that recognizes hand gestures in real-time using a Convolutional Neural Network (CNN) and translates them into movement commands for a robotic car via Raspberry Pi and Arduino.
- 
+# AI-Based Hand Gesture Controlled Robotic Car
 
-## 📋 Table of Contents
- 
-- [Project Overview](#project-overview)
-- [System Architecture](#system-architecture)
-- [Gestures](#gestures)
-- [Project Structure](#project-structure)
-- [Dataset](#dataset)
-- [Model](#model)
-- [Hardware (Coming Soon)](#hardware-coming-soon)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Results](#results)
-- [Roadmap](#roadmap)
- 
+A deep learning and embedded systems project that recognizes hand gestures in real time using a custom Convolutional Neural Network (CNN) and controls a robotic car through Raspberry Pi and Arduino communication.
 
+The system performs live camera inference on a Raspberry Pi and translates gestures into robot movement commands.
+
+---
 
 ## Project Overview
- 
-This project uses a custom-trained CNN to classify 5 hand gestures captured via camera. The recognized gesture is then sent as a command to a Raspberry Pi, which communicates with an Arduino to control the motors of a small robotic car.
- 
-**Current Status:** ✅ Model training complete — Hardware integration in progress
- 
- 
-## System Architecture
- 
-```
-Camera Input
-     │
-     ▼
-┌──────────────────────────┐
-│   CNN Model              │  ← PyTorch (trained on custom dataset)
-│   Image Classification   │
-└──────────────────────────┘
-     │
-     ▼ Gesture Label
-┌──────────────────────────┐
-│      Raspberry Pi        │  ← Runs inference, sends serial commands
-└──────────────────────────┘
-     │ Serial (USB)
-     ▼
-┌──────────────────────────┐
-│         Arduino          │  ← Controls motor driver
-└──────────────────────────┘
-     │
-     ▼
-┌──────────────────────────┐
-│      Robotic Car         │  ← Moves based on gesture
-└──────────────────────────┘
-```
- 
+
+This project combines:
+
+- Computer Vision
+- Deep Learning (PyTorch CNN)
+- Embedded AI
+- Raspberry Pi
+- Arduino motor control
+- Real-time inference
+
+The model recognizes five hand gestures and converts them into robotic actions.  
+
+Current workflow:
+
+Camera → CNN → Gesture Prediction → Raspberry Pi → Arduino → Motor Control  
+
+Current Status:
+
+✅ Dataset collection complete  
+✅ CNN model training complete  
+✅ Real-time gesture recognition complete  
+✅ Arduino software  
+🔄 Raspberry Pi integration ongoing  
+🔄 Robot hardware integration ongoing
+
 ---
- 
-## Gestures
- 
-| Gesture | Label | Car Action | Number |
-|---------|-------|------------|--------|
-| 🫳 Down  | `Down`  | Backward   | 0 |
-| ✊ Fist  | `Fist`  | Stop       | 1 |
-| 🫲 Left  | `Left`  | Turn Left  | 2 |
-| 🫱 Right | `Right` | Turn Right | 3 |
-| ✋ Up    | `Up`    | Forward    | 4 |
+
+## System Architecture
+
+```text
+Pi Camera
+    │
+    ▼
+┌────────────────────┐
+│ Raspberry Pi       │
+│ Real-time CNN      │
+│ Gesture Recognition│
+└────────────────────┘
+    │
+    ▼
+ Gesture Command
+
+┌────────────────────┐
+│ Arduino            │
+│ Motor Controller   │
+└────────────────────┘
+    │
+    ▼
+
+┌────────────────────┐
+│ Robotic Car        │
+└────────────────────┘
+```
+
+---
+
+## Supported Gestures
+
+| Gesture | Car Action |
+|----------|------------|
+| ✋ Up | Forward |
+| 🫳 Down | Backward |
+| 🫲 Left | Turn Left |
+| 🫱 Right | Turn Right |
+| ✊ Fist | Stop |
+
+---
+
+## Dataset
+
+link for dowanload: https://drive.google.com/file/d/1XIfKAD9617ZEVZF2Kdq29gbn-D-zA4Yl/view?usp=drive_link
+
+Custom dataset collected using self-recorded videos.
+
+Frames extracted from videos using [Video Frame Extractor](https://frame-extractor.com/en) and manually organized into gesture classes.
+
+Classes:
+
+- Down
+- Fist
+- Left
+- Right
+- Up
+
+Image preprocessing:
+
+- Resize: 128×128
+- RGB images
+- Normalization
+- Data augmentation
+
+Training augmentation:
+
+```python
+transforms.ColorJitter(
+    brightness=0.3,
+    contrast=0.3
+)
+```
+
+---
 
 ## Project Structure
- 
-```
+
+```text
 AI-Based Hand Gesture Controlled Robotic Car/
-│
+
 ├── Dataset/
-│   ├── Train/
-│   │   ├── Down/        # 500 images each
-│   │   ├── Fist/
-│   │   ├── Left/
-│   │   ├── Right/
-│   │   └── Up/
-│   └── Test/
-│       ├── Down/
-│       ├── Fist/
-│       ├── Left/
-│       ├── Right/
-│       └── Up/
+│   ├── Train/     # 800 images for each class
+│   │   ├── Down
+│   │   ├── Fist
+│   │   ├── Left
+│   │   ├── Right
+│   │   └── Up
+│   │
+│   └── Test/      # 200 images for each class
+│       ├── Down
+│       ├── Fist
+│       ├── Left
+│       ├── Right
+│       └── Up
 │
 ├── model/
-│   └── model.pth        # Saved trained model
+│   └── model.pth
 │
-├── Image_Classification.py   # Model definition, training, evaluation
+├── src/
+│   ├── Image_Classification.py
+│   ├── Gesture_Recognition_pi.py
+│   ├── Model_def.py
+│   ├── Real_Time_Test.py
+│   └── Dataset_Reshuffling.py
+│
 └── README.md
 ```
- 
+
 ---
- 
-## Dataset
- 
-- **Total training images:** 5000 (500 per class)
-- **Classes:** Down, Fist, Left, Right, Up
-- **Image size:** Resized to 128×128 RGB
-- **Source:** The dataset was constructed by recording gesture videos and extracting frames using a video frame extraction tool. Approximately 100 frames were sampled per video.
- 
-### Data Augmentation (applied during training)
-- Random rotation (±15°)
-- Color jitter (brightness & contrast)
-- Normalization: mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]
- 
+
+## CNN Model Architecture
+
+```text
+Input (3×128×128)
+
+Conv2d(3→16)
+BatchNorm
+ReLU
+MaxPool
+
+↓
+
+Conv2d(16→32)
+BatchNorm
+ReLU
+MaxPool
+
+↓
+
+Conv2d(32→64)
+BatchNorm
+ReLU
+MaxPool
+
+↓
+
+Flatten
+
+16384
+
+↓
+
+Linear(16384→256)
+
+↓
+
+Dropout(0.5)
+
+↓
+
+Linear(256→64)
+
+↓
+
+Linear(64→5)
+```
+
 ---
- 
-## Model
- 
-A custom CNN built with PyTorch.
- 
-### Architecture
- 
-```
-Input (3, 128, 128)
-  → Conv2d(3→16) + BatchNorm + ReLU + MaxPool   →  (16, 64, 64)
-  → Conv2d(16→32) + BatchNorm + ReLU + MaxPool  →  (32, 32, 32)
-  → Conv2d(32→64) + BatchNorm + ReLU + MaxPool  →  (64, 16, 16)
-  → Flatten  →  16384
-  → Linear(16384→256) + ReLU + Dropout(0.5)
-  → Linear(256→64) + ReLU
-  → Linear(64→5)
-  → Output (5 classes)
-```
- 
-### Training Config
- 
+
+## Training Configuration
+
 | Parameter | Value |
-|-----------|-------|
+|------------|--------|
 | Optimizer | Adam |
 | Learning Rate | 0.0005 |
-| Weight Decay | 1e-4 |
 | Batch Size | 8 |
 | Epochs | 20 |
-| Loss Function | CrossEntropyLoss |
-| LR Scheduler | ReduceLROnPlateau |
- 
+| Loss | CrossEntropyLoss |
+
 ---
- 
-## Hardware (Coming Soon)
- 
-The following hardware integration is planned for the next phase:
- 
-### Components
-- **Raspberry Pi 5 8GB** - runs the trained CNN model and camera input
-- **Arduino Uno** - receives serial commands, controls motor driver
-- **Pi Camera OV5647** - real-time hand gesture capture
-- **HC - 06 Bluetoo Module** - connect raspberry pi and arduino 
-- **4 MG90S Motor Driver** - drives 4 DC motors
-- **Robotic Car Chassis** - 4WD platform
-- **Power Bank / Battery Pack** - powers Raspberry Pi
-- **9V Battery** - powers Arduino + motors
- 
-### Communication Flow
-- Raspberry Pi captures frame → runs inference → sends command string over serial (e.g., `"FORWARD"`)
-- Arduino reads serial → maps command to motor directions
- 
+
+## Real-Time Inference Features
+
+The Raspberry Pi implementation includes:
+
+### Center ROI extraction
+
+To reduce background noise, only the center region of the image is used:
+
+```python
+roi = get_center_roi(frame)
+```
+
 ---
- 
+
+### Confidence threshold
+
+Low-confidence predictions become:
+
+```python
+"No Gesture"
+```
+
+to avoid accidental robot movement.
+
+---
+
+### Temporal smoothing
+
+Predictions are stabilized using:
+
+```python
+deque()
+Counter()
+```
+
+This prevents frame-by-frame fluctuations.
+
+---
+
+## Hardware
+
+- Raspberry Pi 5
+- Pi Camera
+- Arduino Uno
+- Motor Driver
+- Robotic Chassis
+- Battery Pack
+
+---
+
 ## Installation
- 
-### Requirements
- 
+
+Install dependencies:
+
 ```bash
-Python 3.10+
-PyTorch
-torchvision
-matplotlib
-torchsummary
+pip install torch torchvision matplotlib torchsummary opencv-python pillow picamera2
 ```
- 
-### Setup
- 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/hand-gesture-car.git
-cd hand-gesture-car
- 
-# Install dependencies
-pip install torch torchvision matplotlib torchsummary
-```
- 
+
 ---
- 
-## Usage
- 
-### Train the model
- 
-In `Image_Classification.py`, uncomment `train(train_data)` and comment out `evaluate(test_data)`:
- 
-```python
-if __name__ == '__main__':
-    train_data, test_data = create_dataset()
-    train(train_data)       # ← uncomment to train
-    # evaluate(test_data)   # ← comment out
-```
- 
-Then run:
-```bash
-python Image_Classification.py
-```
- 
-### Evaluate the model
- 
-```python
-if __name__ == '__main__':
-    train_data, test_data = create_dataset()
-    # train(train_data)     # ← comment out
-    evaluate(test_data)     # ← uncomment to evaluate
-```
- 
----
- 
-## Results
- 
-| Epoch | Loss   | Train Accuracy |
-|-------|--------|----------------|
-| 1     | 0.7856 | 66.72%         |
-| 5     | 0.0126 | 99.60%         |
-| 10    | 0.0082 | 99.72%         |
- 
-> ⚠️ Note: High training accuracy with low test accuracy indicates overfitting. Data augmentation and BatchNorm have been added to address this — updated results coming soon.
- 
----
- 
-## Roadmap
- 
-- [x] Collect custom hand gesture dataset
-- [x] Build and train CNN model
-- [x] Add data augmentation & BatchNorm to reduce overfitting
-- [ ] Evaluate improved model performance
-- [ ] Set up Raspberry Pi with camera for real-time inference
-- [ ] Implement serial communication between Raspberry Pi and Arduino
-- [ ] Write Arduino motor control code
-- [ ] Assemble robotic car hardware
-- [ ] End-to-end integration test
-- [ ] Demo video
- 
----
- 
-## Author
- 
-**Christine** — University of Waterloo, Mechatronics Engineering
-Project: AI-Based Hand Gesture Controlled Robotic Car
- 
